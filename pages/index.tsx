@@ -1,6 +1,38 @@
 import Head from 'next/head';
+import Image from 'next/image';
+import { TMDB_API_KEY, TMDB_API_TOKEN } from '../constants';
+import { useState } from 'react';
 
-export default function Home({ hello }: { hello: string }) {
+interface Movie {
+  id: string | number;
+  adult: boolean;
+  backdrop_path?: string;
+  genre_ids: number[];
+  original_title: string;
+  title: string;
+  release_date: string;
+}
+
+interface TMDBResponse {
+  page?: number | string;
+  results: Movie[];
+  total_pages: number;
+  total_results: number;
+}
+
+async function getMovies(page = 2): Promise<TMDBResponse> {
+  console.log(page);
+  const response = await fetch(
+    `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`,
+  );
+  const data = await response.json();
+
+  return data;
+}
+
+export default function Home({ movieResults }: { movieResults: TMDBResponse }) {
+  const [movies, setMovies] = useState(movieResults);
+  const [page, setPage] = useState(movieResults.page || 1);
   return (
     <>
       <Head>
@@ -9,15 +41,60 @@ export default function Home({ hello }: { hello: string }) {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-      <h1 className='text-lg font-semibold text-blue-500'>{hello}</h1>
+      <div className='w-full max-w-4xl mx-auto'>
+        <div className=' grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] grid-flow-row gap-8 place-items-stretch mt-8'>
+          {movies.results.map((movie) => (
+            <div
+              key={movie.id}
+              className='rounded overflow-hidden bg-white shadow-xl'
+            >
+              <Image
+                width={300}
+                height={500}
+                alt={movie.title}
+                src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
+                className='object-cover w-full'
+              />
+              <h2 className='text-lg font-semibold text-center'>
+                {movie.title}
+              </h2>
+            </div>
+          ))}
+        </div>
+        <div className='flex justify-center gap-10 my-10'>
+          <button
+            className='px-4 py-2 bg-indigo-500 text-white'
+            onClick={async () => {
+              if (!movies.page && movies.page === 1) return;
+
+              const newMovies = await getMovies((movies.page as number) - 1);
+              setMovies(newMovies);
+            }}
+          >
+            Prev
+          </button>
+          <button
+            onClick={async () => {
+              if (!movies.page) return;
+
+              const newMovies = await getMovies((movies.page as number) + 1);
+              setMovies(newMovies);
+            }}
+            className='px-4 py-2 bg-indigo-500 text-white'
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </>
   );
 }
 
 export async function getServerSideProps() {
+  const data = await getMovies();
   return {
     props: {
-      hello: 'Hello World',
+      movieResults: data,
     },
   };
 }
