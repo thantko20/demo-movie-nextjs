@@ -43,7 +43,7 @@ export default function Popular({ movies }: { movies: TMDBResponse }) {
   return (
     <>
       <div className='w-full max-w-4xl mx-auto'>
-        <div className=' grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] grid-flow-row gap-8 place-items-stretch mt-8'>
+        <div className=' grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] grid-flow-row gap-8 place-items-stretch mt-8'>
           {movies.results?.map((movie) => (
             <div
               key={movie.id}
@@ -54,9 +54,12 @@ export default function Popular({ movies }: { movies: TMDBResponse }) {
                 height={500}
                 alt={movie.title}
                 src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
-                className='object-cover w-full'
+                className='object-cover w-full aspect-video'
               />
-              <h2 className='text-lg font-semibold text-center'>
+              <h2
+                title={movie.title}
+                className='text-lg font-semibold text-center whitespace-nowrap text-ellipsis p-2 overflow-hidden'
+              >
                 {movie.title}
               </h2>
             </div>
